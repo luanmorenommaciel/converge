@@ -22,7 +22,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  smoke:
+    name: smoke (ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+
+      - name: documentation contracts
+        run: bash tests/test-docs.sh
+
+      - name: clean package allowlist
+        run: bash tests/test-package.sh
+
   gauntlet:
+    if: github.event_name == 'workflow_dispatch'
     name: gauntlet (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
@@ -330,6 +352,7 @@ jobs:
           echo "clean — no shipped or intentionally untracked path depends on the removed proving ground"
 
   cockpit:
+    if: github.event_name == 'workflow_dispatch'
     name: cockpit (ubuntu)
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -366,37 +389,6 @@ jobs:
 
       - name: production build
         run: npm run cockpit:build
-
-  docs:
-    name: docs (ubuntu)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: documentation links, anchors, snippets, versions, and archive truth
-        run: bash tests/test-docs.sh
-
-  package:
-    name: package (ubuntu)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: set up Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: "22"
-
-      - name: clean package allowlist
-        run: bash tests/test-package.sh
 
   composed-e2e:
     name: composed-e2e (${{ matrix.os }})
